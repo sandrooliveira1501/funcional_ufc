@@ -63,3 +63,39 @@ prefixos [] = []
 prefixos xs = (prefixos (init xs)) ++ [xs]
 
 scanSum xs = [ sum ys    | ys <- (prefixos xs)]
+
+
+subInicial [] = []
+subInicial (x:xs) = x:(takeWhile (\y -> x == y) xs)
+
+dropSubInicial [] = []
+dropSubInicial (x:xs) = dropWhile (\y -> x == y) xs
+
+group [] = []
+group (x:xs) = (x,(length (subInicial (x:xs)))):(group (dropSubInicial (x:xs)))
+
+agrupa [] = []
+agrupa xss  | menorLista == 0 = []
+            | otherwise = (map (\xs -> head xs) xss):(agrupa (map (\xs -> tail xs) xss))
+                where menorLista = minimum (map length xss)
+
+
+insert a [] = [a]
+insert a (x:xs) | a <= x = a:x:xs
+                | otherwise = x:(insert a xs)
+
+insertionSort [] = []
+insertionSort [x] = [x]
+insertionSort (x:xs) = insert x (insertionSort xs)
+
+
+data MConj a = Vazio | No2 a Int (MConj a) (MConj a)
+
+mconj1 = No2 'A' 2 Vazio (No2 'B' 1 Vazio Vazio)
+mconj2 = No2 1 2 Vazio (No2 2 1 Vazio Vazio)
+
+listarM Vazio = [] 
+listarM (No2 a n esq dir) = (listarM esq) ++ [a | aux <- [1 .. n]] ++ (listarM dir)
+
+sumMConj Vazio = 0 
+sumMConj (No2 a n esq dir) = (sumMConj esq) + ((toInteger a) * (toInteger n)) + (sumMConj dir)
