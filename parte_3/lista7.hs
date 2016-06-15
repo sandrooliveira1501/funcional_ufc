@@ -92,8 +92,20 @@ instance Show a => Show (Queue a) where
 q1 = pushQueue 1 emptyQ
 q2 = pushQueue 2 q1
 
+-- 10
 
-data Conj a = Vazio | No a (Conj a) (Conj a) deriving (Show)
+data Conj a = Vazio | No a (Conj a) (Conj a) deriving (Show, Eq, Ord)
+
+conj1 = No 1 Vazio Vazio
+conj2 = No 2 conj1 Vazio
+conj3 = No 10 Vazio Vazio
+conj4 = No 5 conj2 conj3
+
+conj21 = No 3 Vazio Vazio
+conj22 = No 4 conj21 Vazio
+conj23 = No 11 Vazio Vazio
+conj24 = No 5 conj22 conj23
+
 
 vazio :: Conj a
 vazio = Vazio
@@ -101,6 +113,91 @@ vazio = Vazio
 esVazio :: Conj a -> Bool
 esVazio Vazio = True
 esVazio (No a esq dir) = False
+
+pertence :: Ord a => a -> Conj a -> Bool
+pertence x Vazio = False
+pertence x (No a esq dir) | x == a = True
+                          | x < a = pertence x esq
+                          | otherwise = pertence x dir
+
+insere :: Ord a => a -> Conj a -> Conj a
+insere x Vazio = No x Vazio Vazio
+insere x (No a esq dir) | x == a = (No a esq dir)
+                        | x < a = No a (insere x esq) dir
+                        | otherwise = No a esq (insere x dir)
+
+mais_esq :: Conj a -> a
+mais_esq (No x Vazio _) = x
+mais_esq (No _ esq _) = mais_esq esq
+
+elimina :: Ord a => a -> Conj a -> Conj a
+elimina x Vazio = Vazio
+elimina x (No y Vazio dir) = if x == y then dir else (No y Vazio (elimina x dir))
+elimina x (No y esq Vazio) = if x == y then esq else (No y (elimina x esq) Vazio)
+
+elimina x (No y esq dir) 
+                        | x > y = (No y esq (elimina x dir))
+                        | x < y = (No y (elimina x esq) dir)
+                        | otherwise = No (mais_esq dir) esq (elimina (mais_esq dir) dir)
+
+subconjunto :: Ord a => Conj a -> Conj a -> Bool
+subconjunto Vazio _ = True
+subconjunto _ Vazio = False
+subconjunto (No a esq dir) q = if pertence a q then (subconjunto esq q) && (subconjunto dir q) else False 
+
+subconjuntoProprio :: Ord a => Conj a -> Conj a -> Bool
+subconjuntoProprio Vazio Vazio = False
+subconjuntoProprio p q = (subconjunto p q) && (not (subconjunto q p))
+
+cardinal :: Conj a -> Int
+cardinal Vazio = 0
+cardinal (No a esq dir) = 1 + cardinal esq + cardinal dir
+
+uniao :: Ord a => Conj a -> Conj a -> Conj a
+uniao Vazio q = q
+uniao (No a esq dir) q = (uniao dir (uniao esq (insere a q)))
+
+uniaoLista :: Ord a => [Conj a] -> Conj a
+uniaoLista [] = Vazio
+uniaoLista [x] = x
+uniaoLista (x:y:xs) = uniaoLista ((uniao x y):xs)
+
+interseccao :: Ord a => Conj a -> Conj a -> Conj a
+interseccao Vazio _ = Vazio
+interseccao p Vazio = Vazio
+interseccao (No a esq dir) q = if pertence a q then (No a (interseccao esq q) (interseccao dir q)) else interseccao (elimina a (No a esq dir)) q 
+
+disjuntos :: Ord a => Conj a -> Conj a -> Bool
+disjuntos p q = if esVazio (interseccao p q) then True else False
+
+diferenca :: Ord a => Conj a -> Conj a -> Conj a
+diferenca Vazio _ = Vazio
+diferenca p Vazio = p
+diferenca (No a esq dir) q = if not (pertence a q) then (No a (diferenca esq q) (diferenca dir q)) else diferenca (elimina a (No a esq dir)) q 
+
+filtraConj :: Ord a => (a -> Bool) -> Conj a -> Conj a    
+filtraConj p Vazio = Vazio
+filtraConj p (No a esq dir) | p a = No a (filtraConj p esq) (filtraConj p dir)
+                            | otherwise = filtraConj p (elimina a (No a esq dir)) 
+
+mapConj :: (a -> b) -> Conj a -> Conj b
+mapConj _ Vazio = Vazio
+mapConj f (No a esq dir) = No (f a ) (mapConj f esq) (mapConj f dir)
+
+toList Vazio = []
+toList (No a esq dir) = (toList esq) ++ [a] ++ (toList dir)
+
+fromList [] = Vazio
+fromList (x:xs) = insere x (fromList xs)
+
+subsets :: [a] -> [[a]]
+subsets []  = [[]]
+subsets (x:xs) = subsets xs ++ map (x:) (subsets xs)
+
+potencia conj = fromList [fromList x | x <- perm ]
+                where perm = subsets (toList conj)
+
+-- 11
 
 data Complex = Complex {real :: Float, img :: Float}
 complex1 = Complex {real = 5, img = 8}
