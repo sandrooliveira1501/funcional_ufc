@@ -93,3 +93,63 @@ q1 = pushQueue 1 emptyQ
 q2 = pushQueue 2 q1
 
 
+data Conj a = Vazio | No a (Conj a) (Conj a) deriving (Show)
+
+vazio :: Conj a
+vazio = Vazio
+
+esVazio :: Conj a -> Bool
+esVazio Vazio = True
+esVazio (No a esq dir) = False
+
+data Complex = Complex {real :: Float, img :: Float}
+complex1 = Complex {real = 5, img = 8}
+complex2 = Complex {real = 1, img = 2}
+
+add z1 z2 = Complex {real = ((real z1) + (real z2)), img = ((img z1) + (img z2))}
+minus z1 z2 = Complex {real = ((real z1) - (real z2)), img = ((img z1) - (img z2))}
+multi z1 z2 = Complex {real = (a*a' - b*b' ), img = (a * b' + b * a')}
+				where 
+                a  = real z1
+                a' = real z2
+                b  = img z1
+                b' = img z2
+
+conjugado z1 = Complex {real = real z1, img = negate (img z1) }
+divisao z1 z2 = Complex {real = ((a*c + b*d)/(c*c + d*d)), img = ((b*c - a*d)/(c*c + d*d))}
+                where 
+                a  = real z1
+                c = real z2
+                b  = img z1
+                d = img z2
+
+negacao z1 = Complex {real = negate (real z1), img = negate (img z1)}
+
+magnitude z = sqrt (x*x + y*y)
+        where 
+            x = real z
+            y = img z 
+
+sinal z = if x == 0 && y == 0 then Complex {real = 0, img = 0} else Complex {real = x/r, img = y/r}
+        where 
+            x = real z
+            y = img z 
+            r = magnitude z
+
+instance Num Complex where
+	z1 + z2       = add z1 z2
+	z1 * z2       = multi z1 z2
+	negate z      = negacao z
+	abs z         = Complex {real = magnitude z, img=0}
+	signum z      = sinal z
+	fromInteger z = Complex {real = realToFrac z, img=0}
+
+instance Show Complex where
+    show z = show (real z) ++ " + " ++ show (img z) ++ "i"
+
+instance Eq Complex where
+    z1 == z2 = ((real z1) == (real z2)) && ((img z1) == (img z2))   
+
+instance Fractional Complex where 
+    z1 / z2 = divisao z1 z2
+    fromRational a = Complex {real = (fromRational a), img = 0}
