@@ -1,0 +1,1 @@
+remove x xs = foldr (\y a -> if x == y then a else y:a) [] xs

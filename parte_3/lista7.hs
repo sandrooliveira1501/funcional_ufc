@@ -184,6 +184,8 @@ mapConj :: (a -> b) -> Conj a -> Conj b
 mapConj _ Vazio = Vazio
 mapConj f (No a esq dir) = No (f a ) (mapConj f esq) (mapConj f dir)
 
+-- potencia
+
 toList Vazio = []
 toList (No a esq dir) = (toList esq) ++ [a] ++ (toList dir)
 
